@@ -1,0 +1,7 @@
+#! /bin/sh
+nix-shell -p haskellPackages.BNFC --command "bnfc --haskell -p CSDC.Parser -o src CSDC.cf"
+mv src/CSDC/Parser/DocCSDC.txt ./grammar.t2t
+rm src/CSDC/Parser/PrintCSDC.hs
+rm src/CSDC/Parser/SkelCSDC.hs
+rm src/CSDC/Parser/TestCSDC.hs
+rm src/CSDC/Parser/*.bak

@@ -1,0 +1,2 @@
+#!/bin/sh
+closure-compiler ./dist/build/csdc-web/csdc-web.jsexe/all.js --compilation_level=ADVANCED_OPTIMIZATIONS --jscomp_off=checkVars > ./out/all.js

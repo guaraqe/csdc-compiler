@@ -1,0 +1,38 @@
+-- CS-DC
+CSDC. CSDC ::= "{" [Outer] "}";
+
+-- Outer record and choice declarations
+Outer. Outer ::= String "->" Constructor "{" [Inner] "}";
+separator Outer ",";
+
+-- Inner record and choice declarations
+Inner. Inner ::= String "->" Constructor "{" [Inner] "}";
+End. Inner ::= String;
+separator Inner ",";
+
+-- Type constructors
+Record. Constructor ::= "Record";
+Choice. Constructor ::= ChoiceType;
+
+Enum. ChoiceType ::= "Enum";
+OneChoice. ChoiceType ::= "OneChoice";
+MultiChoice. ChoiceType ::= "MultiChoice";
+
+-- DAO
+DAOofDAOs. Outer ::= String "->" "DAOofDAOs" "{" Fields "," [Tree] "}";
+
+Fields. Fields ::= "{" [String] "}";
+separator String ",";
+
+Branch. Tree ::= String "->" "{" [Tree] "}" ;
+Leaf. Tree ::= String;
+separator Tree ",";
+
+-- Committee
+Committees. Outer ::= String "->" "Committees" "{" [String] "}";
+
+-- Alias
+Alias. Outer ::= String "->" "Alias" "{" [String] "}";
+
+-- Predefined
+Predefined. Outer ::= "Predefined" "{" [String] "}";

@@ -1,0 +1,102 @@
+name:
+  csdc-compiler
+version:
+  0.1.0
+synopsis:
+  Synopsis
+description:
+  Description
+license:
+  GPL-3
+maintainer:
+  mail@guaraqe.gq
+copyright:
+  2018 Copyright
+build-type:
+  Simple
+cabal-version:
+  >=1.10
+
+executable csdc
+  main-is:
+    CLI.hs
+  other-modules:
+    Result
+  build-depends:
+    base,
+    csdc-compiler,
+    containers,
+    prettyprinter,
+    text
+  hs-source-dirs:
+    app
+  default-language:
+    Haskell2010
+  ghc-options:
+    -Wall
+    -O2
+
+executable csdc-web
+  main-is:
+    Web.hs
+  other-modules:
+    Result
+  build-depends:
+    base,
+    bytestring,
+    containers,
+    csdc-compiler,
+    prettyprinter,
+    reflex,
+    reflex-dom,
+    text
+  hs-source-dirs:
+    app
+  default-language:
+    Haskell2010
+  if impl(ghcjs)
+    ghc-options:
+      -Wall
+      -O2
+      -dedupe
+    cpp-options:
+      -DGHCJS_BROWSER
+  else
+    ghc-options:
+      -Wall
+      -O2
+
+library
+  exposed-modules:
+    CSDC.Compiler
+    CSDC.Declaration
+    CSDC.Definition
+    CSDC.Parser
+    CSDC.Pretty
+    CSDC.Types.Annotated
+    CSDC.Types.Choice
+    CSDC.Types.Name
+    CSDC.Types.Record
+    CSDC.Types.Tree
+  other-modules:
+    CSDC.Parser.AbsCSDC
+    CSDC.Parser.LexCSDC
+    CSDC.Parser.ParCSDC
+    CSDC.Parser.ErrM
+  build-depends:
+    base,
+    aeson,
+    array,
+    containers,
+    prettyprinter,
+    text
+  hs-source-dirs:
+    src
+  build-tools:
+    happy,
+    alex
+  default-language:
+    Haskell2010
+  ghc-options:
+    -Wall
+    -O2
