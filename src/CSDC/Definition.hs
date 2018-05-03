@@ -27,8 +27,10 @@ definitionNames (ChoiceDefinition _ ns) = Set.fromList $ fmap annotated_name ns
 definitionNames (Equality n) = Set.singleton n
 definitionNames Predefined = Set.empty
 
+-- | All names used in a definition set
 allDefinitionNames :: Map Name Definition -> Set Name
 allDefinitionNames = Set.unions . fmap definitionNames . Map.elems
 
+-- | All names that are actually defined in a definition set
 allDefined :: Map Name Definition -> Set Name
 allDefined = Map.keysSet

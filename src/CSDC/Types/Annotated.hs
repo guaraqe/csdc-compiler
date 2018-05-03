@@ -2,8 +2,6 @@ module CSDC.Types.Annotated
   ( IsList (..)
   , IsMandatory (..)
   , Annotated (..)
-  , isAnnotated
-  , readAnnotated
   , readAnnotatedName
   , readAnnotatedWith
   , makeName
@@ -81,13 +79,10 @@ readAnnotatedWith a =
   in
     readAnnotated f
 
+--------------------------------------------------------------------------------
+
 makeName :: String -> Name
 makeName = annotated_name . readAnnotatedName
 
 stringName :: String -> String
 stringName = unwords . getName . makeName
-
-isAnnotated :: String -> Bool
-isAnnotated s =
-  isMandatory s == IsMandatory ||
-  isList s == IsList

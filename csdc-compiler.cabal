@@ -76,7 +76,6 @@ library
     CSDC.Types.Annotated
     CSDC.Types.Choice
     CSDC.Types.Name
-    CSDC.Types.Record
     CSDC.Types.Tree
   other-modules:
     CSDC.Parser.AbsCSDC

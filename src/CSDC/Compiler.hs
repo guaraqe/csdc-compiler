@@ -24,6 +24,8 @@ import qualified Data.Set as Set
 
 --------------------------------------------------------------------------------
 
+-- | A DefinitionSet is just a mapping from names to sets of definitions.
+-- It is wrapped we can give it a suitable Monoid instance.
 newtype DefinitionSet = DefinitionSet (Map Name (Set Definition))
 
 instance Monoid DefinitionSet where
@@ -43,9 +45,12 @@ compilation (D.CSDC outs) = foldMap compileOuter outs
 
 compileOuter :: D.Outer -> DefinitionSet
 
+-- Outer is compiled as a reconstructed Inner
 compileOuter (D.Outer constructor name inner) =
   compileInner (D.Inner constructor name inner)
 
+-- DAOofDAOs reconstruct records level by level of the tree, adding the common
+-- fields to all elements but the leaves.
 compileOuter (D.DAOofDAOs name (D.Fields fields) tree) =
   let
     makeRecord a rs = Set.singleton $ RecordDefinition $
@@ -54,6 +59,8 @@ compileOuter (D.DAOofDAOs name (D.Fields fields) tree) =
   in
     DefinitionSet $ treeMap makeName makeRecord (D.Branch name tree)
 
+-- Committees create a record of composed of subcommittees, each with a
+-- corresponding board.
 compileOuter (D.Committees name list) =
   let
     addName (Annotated _ m (Name ns)) = Annotated NotList m (Name (name:ns))
@@ -65,14 +72,17 @@ compileOuter (D.Committees name list) =
       (\n -> (Name [name] <> annotated_name n) =: RecordDefinition [board,n])
       anns
 
+-- Alias are compiled to lists of equalitites.
 compileOuter (D.Alias name list) =
   foldMap (\n -> makeName n =: Equality (makeName name)) list
 
+-- Predefined is compiled to lists of predefineds.
 compileOuter (D.Predefined list) =
   foldMap (\n -> makeName n =: Predefined) list
 
 --------------------------------------------------------------------------------
 
+-- Inner trees are compiled by generating records level by level.
 compileInner :: D.Inner -> DefinitionSet
 compileInner (D.End _) = mempty
 compileInner (D.Inner name constructor inners) =
@@ -97,6 +107,7 @@ innerName (D.Inner s _ _) = readAnnotatedName s
 
 --------------------------------------------------------------------------------
 
+-- | Checks for multiple definitions within the DefinitionSet.
 multipleDefinitions :: DefinitionSet -> (Map Name Definition, DefinitionSet)
 multipleDefinitions (DefinitionSet m) =
   bimap (fmap fromSingleton) DefinitionSet (Map.partition ((==) 1 . Set.size) m)
@@ -105,6 +116,8 @@ multipleDefinitions (DefinitionSet m) =
 
 --------------------------------------------------------------------------------
 
+-- | Applies the simple hierarchy rule for checking if a name is already
+-- defined.
 isDefinedIn :: Set Name -> Name -> Maybe Name
 isDefinedIn _ (Name []) = Nothing
 isDefinedIn set name@(Name (_:ns)) =
@@ -112,6 +125,8 @@ isDefinedIn set name@(Name (_:ns)) =
     then Just name
     else isDefinedIn set (Name ns)
 
+-- | From the set of definitions, get those that are undefined, and the set
+-- completed by the simple hierarchy rule
 notDefined :: Map Name Definition -> (Set Name, Map Name Definition)
 notDefined defs =
   second (Map.union defs) $ Set.foldl' f (Set.empty, Map.empty) names
