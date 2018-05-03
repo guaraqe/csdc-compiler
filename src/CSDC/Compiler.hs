@@ -5,13 +5,12 @@ module CSDC.Compiler
   , notDefined
   ) where
 
+import CSDC.Declaration
+import CSDC.Definition
 import CSDC.Types.Annotated
 import CSDC.Types.Name
 import CSDC.Types.Tree
 import CSDC.Types.Choice
-import CSDC.Definition
-
-import qualified CSDC.Declaration as D
 
 import Data.Bifunctor
 import Data.Monoid
@@ -38,30 +37,30 @@ instance Monoid DefinitionSet where
 
 --------------------------------------------------------------------------------
 
-compilation :: D.CSDC -> DefinitionSet
-compilation (D.CSDC outs) = foldMap compileOuter outs
+compilation :: CSDC -> DefinitionSet
+compilation (CSDC outs) = foldMap compileOuter outs
 
 --------------------------------------------------------------------------------
 
-compileOuter :: D.Outer -> DefinitionSet
+compileOuter :: Outer -> DefinitionSet
 
 -- Outer is compiled as a reconstructed Inner
-compileOuter (D.Outer constructor name inner) =
-  compileInner (D.Inner constructor name inner)
+compileOuter (Outer constructor name inner) =
+  compileInner (Inner constructor name inner)
 
 -- DAOofDAOs reconstruct records level by level of the tree, adding the common
 -- fields to all elements but the leaves.
-compileOuter (D.DAOofDAOs name (D.Fields fields) tree) =
+compileOuter (DAOofDAOs name (Fields fields) tree) =
   let
     makeRecord a rs = Set.singleton $ RecordDefinition $
       fmap readAnnotatedName rs <>
       fmap (readAnnotatedWith a) fields
   in
-    DefinitionSet $ treeMap makeName makeRecord (D.Branch name tree)
+    DefinitionSet $ treeMap makeName makeRecord (Branch name tree)
 
 -- Committees create a record of composed of subcommittees, each with a
 -- corresponding board.
-compileOuter (D.Committees name list) =
+compileOuter (Committees name list) =
   let
     addName (Annotated _ m (Name ns)) = Annotated NotList m (Name (name:ns))
     anns = fmap readAnnotatedName list
@@ -73,37 +72,37 @@ compileOuter (D.Committees name list) =
       anns
 
 -- Alias are compiled to lists of equalitites.
-compileOuter (D.Alias name list) =
+compileOuter (Alias name list) =
   foldMap (\n -> makeName n =: Equality (makeName name)) list
 
 -- Predefined is compiled to lists of predefineds.
-compileOuter (D.Predefined list) =
-  foldMap (\n -> makeName n =: Predefined) list
+compileOuter (CSDC.Declaration.Predefined list) =
+  foldMap (\n -> makeName n =: CSDC.Definition.Predefined) list
 
 --------------------------------------------------------------------------------
 
 -- Inner trees are compiled by generating records level by level.
-compileInner :: D.Inner -> DefinitionSet
-compileInner (D.End _) = mempty
-compileInner (D.Inner name constructor inners) =
+compileInner :: Inner -> DefinitionSet
+compileInner (End _) = mempty
+compileInner (Inner name constructor inners) =
   let
     fields = map innerName inners
     compiled = case constructor of
-      D.Record ->
+      Record ->
         makeName name =: RecordDefinition fields
-      D.Choice choice -> case choice of
-        D.Enum ->
+      Choice choice -> case choice of
+        Enum ->
           makeName name =: ChoiceDefinition One fields
-        D.OneChoice ->
+        OneChoice ->
           makeName name =: ChoiceDefinition One fields
-        D.MultiChoice ->
+        MultiChoice ->
           makeName name =: ChoiceDefinition Multi fields
   in
     compiled <> foldMap compileInner inners
 
-innerName :: D.Inner -> Annotated Name
-innerName (D.End s) = readAnnotatedName s
-innerName (D.Inner s _ _) = readAnnotatedName s
+innerName :: Inner -> Annotated Name
+innerName (End s) = readAnnotatedName s
+innerName (Inner s _ _) = readAnnotatedName s
 
 --------------------------------------------------------------------------------
 
